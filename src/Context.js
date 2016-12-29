@@ -18,18 +18,35 @@ class Context {
      */
     constructor(canvas, options) {
 
+        var context_options = {
+            alpha: false,
+            depth: true,
+            stencil: true,
+            antialias: true,
+            premultipliedAlpha: false,
+            preserveDrawingBuffer: false
+        };
 
         this.canvas = canvas;
 
-        this.gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+        this.gl = canvas.getContext("webgl", context_options) || canvas.getContext("experimental-webgl", context_options);
 
         if (!this.gl) {
             throw new Error('Counldnt get webgl context from canvas');
         }
     }
 
+    get blendState() {
+        return this._blendState;
+    }
+
+    set blendState(val) {
+
+    }
+
+
     /**
-     * 
+     * Update/Create a gl resource
      * @param resource
      */
     update(resource) {
@@ -37,10 +54,30 @@ class Context {
     }
 
     /**
-     * 
+     * Release a resource
      * @param resource
      */
     release(resource) {
+
+    }
+
+    /**
+     * 
+     * @param resource
+     */
+    bind(resource) {
+
+    }
+
+    /**
+     * 
+     * @param topology
+     */
+    draw(topology) {
+
+    }
+
+    clear() {
 
     }
 
