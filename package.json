@@ -1,0 +1,39 @@
+{
+  "name": "uon.gl",
+  "version": "0.1.0",
+  "description": "A WebGL library",
+  "main": "uon.gl.js",
+  
+   "browserify": {
+    "transform": [
+      [
+        "babelify",
+        {
+          "presets": [
+            "es2015"
+          ]
+        }
+      ]
+    ]
+  },
+  
+  "dependencies": {
+    "uon.core": "latest"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/uon-team/uon.gl.git"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Gabriel Roy",
+    "email": "gab@uon.io",
+    "url": "https://uon.io"
+  },
+  "keywords": [
+    "webgl",
+    "uon",
+    "3d"
+  ]
+}
