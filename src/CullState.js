@@ -14,49 +14,44 @@ class CullState {
     /**
      *
      * @param enabled
-     * @param eq
-     * @param src
-     * @param dst
+     * @param winding
      */
-    constructor(enabled, eq, src, dst) {
+    constructor(enabled, winding) {
 
         this.enabled = enabled;
-        this.equation = eq || 0;
-        this.src = src || 0;
-        this.dst = dst || 0;
+        this.winding = winding || CullState.CCW;
 
     }
 
     /**
-     * Test for equality with anonther BlendState
-     * @param {BlendState} blend
+     * Test for equality with anonther CullState
+     * @param {CullState} cs
      */
-    equals(blend) {
-        return this.enabled === blend.enabled &&
-            this.equation === blend.equation &&
-            this.src === blend.src &&
-            this.dst === blend.dst;
+    equals(cs) {
+        return this.enabled === cs.enabled &&
+            this.winding === cs.winding;
     }
 
     /**
      * Copy values from another blend state
-     * @param {BlendState} blend
+     * @param {CullState} cs
      */
-    copy(blend) {
-        this.enabled = blend.enabled;
-        this.equation = blend.equation;
-        this.src = blend.src;
-        this.dst = blend.dst;
+    copy(cs) {
+        this.enabled = cs.enabled;
+        this.winding = cs.winding;
     }
 
     /**
-     * Clones the blend state
+     * Creates a copy of this object
      */
     clone() {
-        return new BlendState(this.enabled, this.equation, this.src, this.dst);
+        return new CullState(this.enabled, this.winding);
     }
 
 
 };
+
+CullState.CCW = 0x0901;
+CullState.CW = 0x0900;
 
 module.exports = CullState;

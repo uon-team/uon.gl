@@ -5,9 +5,10 @@
  * @ignore
  */
 
+const CompareOp = require('./CompareOp');
 
 /**
- * 
+ * Represents a blend operator
  */
 class BlendState {
 
@@ -50,7 +51,7 @@ class BlendState {
     }
 
     /**
-     * Clones the blend state
+     * Creates a copy of this object
      */
     clone() {
         return new BlendState(this.enabled, this.equation, this.src, this.dst);
@@ -59,31 +60,31 @@ class BlendState {
 
 };
 
-BlendState.Equation = {
-    Add: 0,
-    Sub: 1,
-    InvSub: 2,
-    Min: 3,
-    Max: 4
+const EQUATION = BlendState.Equation = {
+    Add: 0x8006,
+    Sub: 0x800A,
+    InvSub: 0x800B,
+    Min: null, // not supported
+    Max: null // not supported
 };
 
-BlendState.Blend = {
+const BLENDING = BlendState.Blend = {
     Zero: 0,
     One: 1,
-    SrcColor: 2,
-    OneMinusSrcColor: 3,
-    SrcAlpha: 4,
-    OneMinusSrcAlpha: 5,
-    DstAlpha: 6,
-    OneMinusDstAlpha: 7,
-    DstColor: 8,
-    OneMinusDstColor: 9,
-    SrcAlphaSaturate: 10
+    SrcColor: 0x0300,
+    OneMinusSrcColor: 0x0301,
+    SrcAlpha: 0x0302,
+    OneMinusSrcAlpha: 0x0303,
+    DstAlpha: 0x0304,
+    OneMinusDstAlpha: 0x0305,
+    DstColor: 0x0306,
+    OneMinusDstColor: 0x0307,
+    SrcAlphaSaturate: 0x0308
 };
 
-BlendState.ADD = new BlendState(true, 0, 4, 1);
-BlendState.SUB = new BlendState(true, 0, 0, 3);
-BlendState.MULTIPLY = new BlendState(true, 0, 0, 2);
+BlendState.ADD = new BlendState(true, EQUATION.Add, BLENDING.SrcAlpha, BLENDING.One);
+BlendState.SUB = new BlendState(true, EQUATION.Add, BLENDING.Zero, BLENDING.OneMinusSrcColor);
+BlendState.MULTIPLY = new BlendState(true, EQUATION.Add, BLENDING.Zero, BLENDING.SrcColor);
 
 
 module.exports = BlendState;
