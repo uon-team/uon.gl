@@ -10,6 +10,7 @@ const DepthState = require('./DepthState');
 const StencilState = require('./StencilState');
 const CullState = require('./CullState');
 const Color = require('./Color');
+const ClearOptions = require('./ClearOptions');
 
 /**
  *  The web gl context
@@ -32,8 +33,10 @@ class Context {
             preserveDrawingBuffer: false
         };
 
+        // the canvas element on which we do the rendering
         this.canvas = canvas;
 
+        // the gl context
         this.gl = canvas.getContext("webgl", context_options) || canvas.getContext("experimental-webgl", context_options);
 
         if (!this.gl) {
@@ -47,6 +50,10 @@ class Context {
         this._depthState = new DepthState(true);
         this._stencilState = new StencilState(true);
         this._cullState = new CullState(true);
+
+        this._clearOptions = new ClearOptions();
+        this._currentProgram = null;
+
     }
 
     /**
@@ -166,23 +173,16 @@ class Context {
 
 
     /**
-     * Set the clear color
+     * Set the clear options
      */
-    set clearColor(val) {
-        this.gl.clearColor(val.r, val.g, val.b, val.a);
-    }
+    set clearOptions(val) {
+        var gl = this.gl;
+        var color = val.color;
+        gl.clearColor(color.r, color.g, color.b, color.a);
+        gl.clearDepth(val.depth);
+        gl.clearStencil(val.stencil);
 
-    /**
-     * Set the clear depth value
-     */
-    set clearDepth(val) {
-        this.gl.clearDepth(val);
-    }
-    /**
-     * Set the clear stencil value
-     */
-    set clearStencil(val) {
-        this.gl.clearStencil(val);
+        this._clearOptions = val;
     }
 
 
@@ -197,7 +197,9 @@ class Context {
 
         this.gl.setViewport(x, y, w, h);
     }
-     
+
+
+
 
 
     /**
@@ -218,6 +220,7 @@ class Context {
      * @param resource
      */
     release(resource) {
+
         resource.release(this.gl);
 
         resource._glresource = null;
@@ -243,35 +246,96 @@ class Context {
     }
 
     /**
-     * Clear the current render target
+     * Sets uniforms for the current program
+     * @param {Object} values
      */
-    clear(color, depth, stencil) {
+    uniforms(values) {
 
-        let gl = this.gl;
-        let bits = 0;
+        if (this._currentProgram == null) {
+            throw new Error('A program must be bound before you can apply uniforms');
+        }
+
+        var gl = this.gl;
+        var tex_count = -1;
+        var program_uniforms = this._currentProgram.uniforms;
 
 
-        if (arguments.length == 0) {
+        for (var i in values) {
 
-            bits = gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT;
+            var param = program_uniforms[i];
+            var val = values[i];
 
-        } else {
+            if (!param)
+                continue;
 
-            if (color === true) {
-                bits |= gl.COLOR_BUFFER_BIT;
-            }
+            switch (param.type) {
+                case gl.FLOAT_MAT4: {
+                    gl.uniformMatrix4fv(param.index, false, val);
+                    break;
+                }
+                   
+                case gl.FLOAT_MAT3: {
+                    gl.uniformMatrix3fv(param.index, false, val);
+                    break;
+                }
 
-            if (depth === true) {
-                bits |= gl.DEPTH_BUFFER_BIT;
-            }
+                case gl.FLOAT_MAT2: {
+                    gl.uniformMatrix2fv(param.index, false, val);
+                    break;
+                }
 
-            if (stencil === true) {
-                bits |= gl.STENCIL_BUFFER_BIT;
+                case gl.FLOAT_VEC4: {
+                    gl.uniform4fv(param.index, val);
+                    break;
+                }
+                case gl.FLOAT_VEC3: {
+                    gl.uniform3fv(param.index, val);
+                    break;
+                }
+                case gl.FLOAT_VEC2: {
+                    gl.uniform2fv(param.index, val);
+                    break;
+                }
+
+                case gl.FLOAT: {
+                    gl.uniform1fv(param.index, [val]);
+                    break;
+                }
+   
+                case gl.SAMPLER_2D: {
+
+                    tex_count++;
+
+                    if (!val) {
+                        break;
+                    }
+
+                    val.bind(gl, tex_count);
+                    gl.uniform1i(param.index, tex_count);
+
+                    break;
+                }
+
+                case gl.SAMPLER_CUBE: {
+                    break;
+                }
+
             }
 
         }
 
-        gl.clear(bits);
+    }
+
+    /**
+     * Clear the current render target
+     */
+    clear(bits) {
+
+        if (arguments.length == 0) {
+            bits = ClearOptions.ALL;
+        }
+
+       this.gl.clear(bits);
     }
 
 };

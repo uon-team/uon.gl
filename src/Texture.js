@@ -41,6 +41,21 @@ class Texture extends Resource {
         // create a gl texture
         var id = gl.createTexture();
 
+
+        // save our gl object
+        this._glresource = {
+            id: id,
+            unit: -1,
+            bound: false
+        };
+
+
+    }
+
+    update(gl, options) {
+
+        var id = this._glresource.id;
+
         // bind our new texture
         gl.bindTexture(gl.TEXTURE_2D, id);
 
@@ -64,18 +79,7 @@ class Texture extends Resource {
         }
 
 
-        // save our gl object
-        this._glresource = {
-            id: id,
-            unit: -1,
-            bound: false
-        };
 
-
-    }
-
-    update(gl) {
-        throw new Error('You must implement update(gl) in subclass ' + this.constructor.name);
     }
 
     bind(gl, unit) {
