@@ -11,6 +11,7 @@ const StencilState = require('./StencilState');
 const CullState = require('./CullState');
 const Color = require('./Color');
 const ClearOptions = require('./ClearOptions');
+const DataType = require('./DataType');
 
 /**
  *  The web gl context
@@ -42,6 +43,29 @@ class Context {
         if (!this.gl) {
             throw new Error('Counldnt get webgl context from canvas');
         }
+
+        // init extentions
+
+        var ext_list = [
+            "ANGLE_instanced_arrays",
+            "OES_texture_float",
+            "OES_texture_half_float",
+            "OES_texture_float_linear",
+            "EXT_frag_depth"
+        ];
+
+        this._extensions = {};
+
+
+        ext_list.forEach((name) => {
+            var ext = this.gl.getExtension(name);
+            if (ext) {
+                this._extensions[name] = ext;
+            } else {
+                console.warn("Couldnt initialize extension", name);
+            }
+        })
+     
 
 
         // init defaults
@@ -185,6 +209,19 @@ class Context {
         this._clearOptions = val;
     }
 
+    /**
+     * Set the render buffer to render to
+     */
+    set renderTarget(rt) {
+        this._currentRenderTarget = rt;
+
+        if (rt == null) {
+            this.gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        } else {
+            rt.bind(this.gl);
+        }
+    }
+
 
     /**
      * Sets the viewport in pixels
@@ -235,13 +272,121 @@ class Context {
     }
 
     /**
-     * Draw the current state
+     * Draw a model
+     * @param vbuffer
+     * @param ibuffer
      * @param topology
      */
-    draw(topology) {
+    draw(vbuffer, ibuffer, topology) {
+
+        // bind the vbuffer
+        vbuffer.bind(this.gl);
+
+        // bind attributes
+        this.bindAttributes(vbuffer);
 
 
+        if (!ibuffer) {
 
+            // draw without indices
+            this.gl.drawArrays(topology, 0, vbuffer.count);
+
+        } else {
+
+            // bind index buffer
+            ibuffer.bind(this.gl);
+
+            // draw with indices
+            this.gl.drawElements(topology, ibuffer.count, this.gl.UNSIGNED_SHORT, 0);
+        }
+
+
+    }
+
+    /**
+     * Draw a
+     * @param vbuffer
+     * @param ibuffer
+     * @param instbuffer
+     * @param topology
+     * @param count
+     */
+    drawInstanced(vbuffer, ibuffer, instbuffer, topology, count) {
+
+        var gl = this.gl;
+        var inst_ext = this._extensions['ANGLE_instanced_arrays'];
+
+        if (!inst_ext) {
+            console.warn('Cannot drawInstanced because ANGLE_instanced_arrays extension is not supported.');
+            return;
+        }
+
+        // bind the vbuffer
+        vbuffer.bind(this.gl);
+
+        // bind attributes
+        this.bindAttributes(vbuffer);
+
+        // bind instance buffer
+        instbuffer.bind(this.gl);
+
+        // bind attributes
+        this.bindAttributes(instbuffer, 1);
+
+
+        if (!ibuffer) {
+
+            // draw without indices
+            gl.drawArraysInstancedANGLE(topology, 0, vbuffer.count, count);
+
+        } else {
+
+            // bind index buffer
+            ibuffer.bind(this.gl);
+
+            // draw with indices
+            inst_ext.drawElementsInstancedANGLE(topology, ibuffer.count, gl.UNSIGNED_SHORT, 0, count);
+        }
+
+    }
+
+    /**
+     * 
+     * @param vb
+     * @param divisor
+     */
+    bindAttributes(vb, divisor) {
+
+        var gl = this.gl;
+        var inst_ext = this._extensions['ANGLE_instanced_arrays'];
+
+        var vsize = vb.layout.getStride(),
+            elements = vb.layout.attributes,
+            element;
+
+        for (var i = 0; i < elements.length; i++) {
+
+            element = elements[i];
+
+            var loc = this._currentProgram.attributeLocations[element.usage];
+
+            if (loc !== undefined) {
+
+                gl.enableVertexAttribArray(loc);
+                gl.vertexAttribPointer(loc, element.count, DataType.ToGLType(element.type), false, vsize, element.offset);
+
+                if (inst_ext && divisor !== undefined) {
+
+                    inst_ext.vertexAttribDivisorANGLE(loc, divisor);
+
+                } /*else if (inst_ext) {
+
+                    inst_ext.vertexAttribDivisorANGLE(loc, 0);
+
+                }*/
+
+            }
+        }
 
     }
 
