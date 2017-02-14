@@ -42,7 +42,7 @@ class Color {
 
         } else if (typeof value === 'string') {
 
-            this.setStyle(value);
+            this.fromStyle(value);
 
         }
 

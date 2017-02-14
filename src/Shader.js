@@ -20,25 +20,46 @@ class Shader extends Resource {
     }
 
     create(gl) {
-        throw new Error('You must implement create(gl) in subclass ' + this.constructor.name);
+
+        // create a new gl shader
+        var id = gl.createShader(this.type);
+
+        // set shader source
+        gl.shaderSource(id, this.src);
+
+        // compile shader
+        gl.compileShader(id);
+
+        // check compile status
+        if (!gl.getShaderParameter(id, gl.COMPILE_STATUS)) {
+            console.error(gl.getShaderInfoLog(id), this);
+
+            throw new Error(gl.getShaderInfoLog(id));
+        }
+
+        this._glresource = {
+            id: id
+        };
+
     }
 
     update(gl) {
-        throw new Error('You must implement update(gl) in subclass ' + this.constructor.name);
+        return;
     }
 
     bind(gl) {
-        throw new Error('Cannot call bind on a Shader, bind must be called on a ShaderProgram');
+        return;
     }
 
     release(gl) {
-        throw new Error('You must implement release(gl) in subclass ' + this.constructor.name);
+
+        gl.deleteShader(this._glresource.id);
     }
 
 
 };
 
-Shader.VERTEX = 0;
-Shader.FRAGMENT = 1;
+Shader.VERTEX = 0x8B31;
+Shader.FRAGMENT = 0x8B30;
 
 module.exports = Shader;
