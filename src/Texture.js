@@ -7,6 +7,8 @@
 const Resource = require('./Resource');
 const DataType = require('./DataType');
 const PixelFormat = require('./PixelFormat');
+
+
 /**
  * 
  */
@@ -33,7 +35,7 @@ class Texture extends Resource {
 
     create(gl, options) {
 
-        // cehck if we are allowed
+        // check if we are allowed
         if (this._glresource) {
             throw new Error('Cannot call create on an already created texture');
         }
