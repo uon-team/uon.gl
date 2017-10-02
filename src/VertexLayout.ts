@@ -5,33 +5,37 @@
  * @ignore
  */
 
-const DataType = require('./DataType');
-
+import { DataType, GetTypeSize } from './DataType';
 
 /**
  * VertexLayout element
  */
-class Attribute {
+export class Attribute {
 
-    constructor(usage, type, count, offset) {
-        this.usage = usage;
-        this.type = type;
-        this.count = count;
-        this.offset = offset;
+    constructor(
+        public usage: string,
+        public type: DataType,
+        public count: number,
+        public offset: number) {
+       
     }
 };
 
 /**
  * Vertex buffer layout descriptor
  */
-class VertexLayout {
+export class VertexLayout {
 
+
+    attributes: Attribute[];
+    offset: number;
+    elementCount: number;
 
     /**
      * 
      * @param {Array} attrs
      */
-    constructor(attrs) {
+    constructor() {
 
         this.attributes = [];
         this.offset = 0;
@@ -44,17 +48,20 @@ class VertexLayout {
      * @param {Number} type - The data type for the attribute
      * @param {Number} count - The number of elements
      */
-    add(usage, type, count) {
+    add(usage: string, type: DataType, count: number) {
 
         if (type != DataType.Float) {
             throw new Error('Only Float elements are supported in WebGL 1');
         }
 
-        var size = DataType.GetSize(type);
+        var size = GetTypeSize(type);
+
+
+        this.attributes.push(new Attribute(usage, type, count, this.offset));
 
         this.offset += size * count;
         this.elementCount += count;
-        this.attributes.push(new Attribute(usage, type, count, this.offset));
+        
     }
 
     /**
@@ -76,7 +83,7 @@ class VertexLayout {
      * Test for equality with anonther layout
      * @param {VertexLayout} vl
      */
-    equals(vl) {
+    equals(vl: VertexLayout) {
 
         if (this.attributes.length != vl.attributes.length) {
             return false;
@@ -97,6 +104,3 @@ class VertexLayout {
 
 
 };
-
-
-module.exports = VertexLayout;

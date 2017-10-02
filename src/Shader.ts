@@ -4,14 +4,24 @@
  * @author Gabriel Roy <gab@uon.io>
  * @ignore
  */
-const Resource = require('./Resource');
+
+import { Resource } from './Resource';
+
 
 /**
  * 
  */
-class Shader extends Resource {
+export class Shader extends Resource {
 
-    constructor(type, src) {
+
+    static VERTEX = 0x8B31;
+    static FRAGMENT = 0x8B30;
+
+    src: string;
+    type: number;
+
+
+    constructor(type: number, src: string) {
         super();
 
         this.src = src;
@@ -19,7 +29,7 @@ class Shader extends Resource {
 
     }
 
-    create(gl) {
+    create(gl: WebGLRenderingContext) {
 
         // create a new gl shader
         var id = gl.createShader(this.type);
@@ -43,23 +53,18 @@ class Shader extends Resource {
 
     }
 
-    update(gl) {
+    update(gl: WebGLRenderingContext) {
         return;
     }
 
-    bind(gl) {
+    bind(gl: WebGLRenderingContext) {
         return;
     }
 
-    release(gl) {
+    release(gl: WebGLRenderingContext) {
 
         gl.deleteShader(this._glresource.id);
     }
 
 
 };
-
-Shader.VERTEX = 0x8B31;
-Shader.FRAGMENT = 0x8B30;
-
-module.exports = Shader;

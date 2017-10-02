@@ -7,7 +7,7 @@
 
 
 const TYPE_SIZE = [
-    4, 8, 1, 2, 4, 1, 2, 4
+    2, 4, 8, 1, 2, 4, 1, 2, 4
 ]
 
 const GL_TYPE = [
@@ -23,25 +23,25 @@ const GL_TYPE = [
     0x1405, //Uint32: 8,
 ]
 
-module.exports = {
+export enum DataType {
 
-    Half: 0,
-    Float: 1,
-    Double: 2,
-    Int8: 3,
-    Int16: 4,
-    Int32: 5,
-    Uint8: 6,
-    Uint16: 7,
-    Uint32: 8,
+    Half = 0,
+    Float = 1,
+    Double = 2,
+    Int8 = 3,
+    Int16 = 4,
+    Int32 = 5,
+    Uint8 = 6,
+    Uint16 = 7,
+    Uint32 = 8,
+}
 
-    GetSize: function (type) {
-        return TYPE_SIZE[type];
-    },
+export function ToGLType(type: DataType) {
 
-    ToGLType: function (type) {
-        return GL_TYPE[type];
-    }
-  
+    return GL_TYPE[type];
+};
 
+export function GetTypeSize(type: DataType) {
+
+    return TYPE_SIZE[type];
 };

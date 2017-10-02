@@ -6,20 +6,29 @@
  */
 
 
+
+export enum Winding {
+    CCW = 0x0901,
+    CW = 0x0900
+}
+
 /**
  * 
  */
-class CullState {
+export class CullState {
+
+    enabled: boolean;
+    winding: Winding;
 
     /**
      *
      * @param enabled
      * @param winding
      */
-    constructor(enabled, winding) {
+    constructor(enabled: boolean, winding?: Winding) {
 
         this.enabled = enabled;
-        this.winding = winding || CullState.CCW;
+        this.winding = winding || Winding.CCW;
 
     }
 
@@ -27,7 +36,7 @@ class CullState {
      * Test for equality with anonther CullState
      * @param {CullState} cs
      */
-    equals(cs) {
+    equals(cs: CullState) {
         return this.enabled === cs.enabled &&
             this.winding === cs.winding;
     }
@@ -36,7 +45,7 @@ class CullState {
      * Copy values from another blend state
      * @param {CullState} cs
      */
-    copy(cs) {
+    copy(cs: CullState) {
         this.enabled = cs.enabled;
         this.winding = cs.winding;
     }
@@ -50,8 +59,3 @@ class CullState {
 
 
 };
-
-CullState.CCW = 0x0901;
-CullState.CW = 0x0900;
-
-module.exports = CullState;

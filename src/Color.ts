@@ -5,32 +5,47 @@
  * 
  */
 
+
+function hue2rgb(p: number, q: number, t: number) {
+
+    if (t < 0) t += 1;
+    if (t > 1) t -= 1;
+    if (t < 1 / 6) return p + (q - p) * 6 * t;
+    if (t < 1 / 2) return q;
+    if (t < 2 / 3) return p + (q - p) * 6 * (2 / 3 - t);
+    return p;
+
+};
+
+
 /**
  * Represents a color with floats
  */
-class Color {
+export class Color {
 
-    constructor(color) {
+    r: number = 0;
+    g: number = 0;
+    b: number = 0;
+    a: number = 1;
 
-        this.r = 0;
-        this.g = 0;
-        this.b = 0;
-        this.a = 1;
+    private _cache: Float32Array;
+
+    constructor(...color: number[]) {
 
         if (arguments.length === 3) {
 
-            return this.setRGB(arguments[0], arguments[1], arguments[2]);
+            return this.setRGB(color[0], color[1], color[2]);
 
         }
 
         if (arguments.length === 4) {
 
-            return this.setRGBA(arguments[0], arguments[1], arguments[2], arguments[3]);
+            return this.setRGBA(color[0], color[1], color[2], color[3]);
 
         }
     }
 
-    set(value) {
+    set(value: any) {
 
         if (value instanceof Color) {
 
@@ -50,7 +65,7 @@ class Color {
 
     }
 
-    setHex(hex) {
+    setHex(hex: number) {
 
         hex = Math.floor(hex);
 
@@ -62,12 +77,12 @@ class Color {
 
     }
 
-    setAlpha(a) {
+    setAlpha(a: number) {
         this.a = a;
         return this;
     }
 
-    setRGB(r, g, b) {
+    setRGB(r: number, g: number, b: number) {
 
         this.r = r;
         this.g = g;
@@ -77,7 +92,7 @@ class Color {
 
     }
 
-    setRGBA(r, g, b, a) {
+    setRGBA(r: number, g: number, b: number, a: number) {
 
         this.r = r;
         this.g = g;
@@ -88,7 +103,7 @@ class Color {
     }
 
 
-    setHSL(h, s, l) {
+    setHSL(h: number, s: number, l: number) {
 
         // h,s,l ranges are in 0.0 - 1.0
 
@@ -97,17 +112,6 @@ class Color {
             this.r = this.g = this.b = l;
 
         } else {
-
-            var hue2rgb = function (p, q, t) {
-
-                if (t < 0) t += 1;
-                if (t > 1) t -= 1;
-                if (t < 1 / 6) return p + (q - p) * 6 * t;
-                if (t < 1 / 2) return q;
-                if (t < 2 / 3) return p + (q - p) * 6 * (2 / 3 - t);
-                return p;
-
-            };
 
             var p = l <= 0.5 ? l * (1 + s) : l + s - (l * s);
             var q = (2 * l) - p;
@@ -122,7 +126,7 @@ class Color {
 
     }
 
-    fromStyle(style) {
+    fromStyle(style: string) {
 
         // rgb(255,0,0)
 
@@ -180,7 +184,7 @@ class Color {
 
     }
 
-    copy(color) {
+    copy(color: Color) {
 
         this.r = color.r;
         this.g = color.g;
@@ -191,7 +195,7 @@ class Color {
 
     }
 
-    copyGammaToLinear(color) {
+    copyGammaToLinear(color: Color) {
 
         this.r = color.r * color.r;
         this.g = color.g * color.g;
@@ -201,7 +205,7 @@ class Color {
 
     }
 
-    copyLinearToGamma(color) {
+    copyLinearToGamma(color: Color) {
 
         this.r = Math.sqrt(color.r);
         this.g = Math.sqrt(color.g);
@@ -245,13 +249,15 @@ class Color {
 
     }
 
-    getHSL(optionalTarget) {
+    getHSL(target?: any) {
 
         // h,s,l ranges are in 0.0 - 1.0
 
-        var hsl = optionalTarget || { h: 0, s: 0, l: 0 };
+        var hsl = target || { h: 0, s: 0, l: 0 };
 
-        var r = this.r, g = this.g, b = this.b;
+        var r = this.r,
+            g = this.g,
+            b = this.b;
 
         var max = Math.max(r, g, b);
         var min = Math.min(r, g, b);
@@ -296,7 +302,7 @@ class Color {
 
     }
 
-    offsetHSL(h, s, l) {
+    offsetHSL(h: number, s: number, l: number) {
 
         var hsl = this.getHSL();
 
@@ -308,7 +314,7 @@ class Color {
 
     }
 
-    add(color) {
+    add(color: Color) {
 
         this.r += color.r;
         this.g += color.g;
@@ -318,7 +324,7 @@ class Color {
 
     }
 
-    addColors(color1, color2) {
+    addColors(color1: Color, color2: Color) {
 
         this.r = color1.r + color2.r;
         this.g = color1.g + color2.g;
@@ -328,7 +334,7 @@ class Color {
 
     }
 
-    addScalar(s) {
+    addScalar(s: number) {
 
         this.r += s;
         this.g += s;
@@ -338,7 +344,7 @@ class Color {
 
     }
 
-    multiply(color) {
+    multiply(color: Color) {
 
         this.r *= color.r;
         this.g *= color.g;
@@ -348,7 +354,7 @@ class Color {
 
     }
 
-    multiplyScalar(s) {
+    multiplyScalar(s: number) {
 
         this.r *= s;
         this.g *= s;
@@ -358,7 +364,7 @@ class Color {
 
     }
 
-    lerp(color, alpha) {
+    lerp(color: Color, alpha: number) {
 
         this.r += (color.r - this.r) * alpha;
         this.g += (color.g - this.g) * alpha;
@@ -368,13 +374,13 @@ class Color {
 
     }
 
-    equals(c) {
+    equals(c: Color) {
 
         return (c.r === this.r) && (c.g === this.g) && (c.b === this.b);
 
     }
 
-    fromArray(array) {
+    fromArray(array: number[]) {
 
         this.r = array[0];
         this.g = array[1];
@@ -385,7 +391,7 @@ class Color {
 
     }
 
-    toArray(array, offset, copyAlpha) {
+    toArray(array: any, offset?: number, copyAlpha?: boolean) {
 
         if (array === undefined)
             array = [];
@@ -416,6 +422,3 @@ class Color {
     }
 
 };
-
-
-module.exports = Color;

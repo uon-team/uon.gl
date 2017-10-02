@@ -5,28 +5,56 @@
  * @ignore
  */
 
-const BlendState = require('./BlendState');
-const DepthState = require('./DepthState');
-const StencilState = require('./StencilState');
-const CullState = require('./CullState');
-const Color = require('./Color');
-const ClearOptions = require('./ClearOptions');
-const DataType = require('./DataType');
+import { BlendState } from './BlendState';
+import { DepthState } from './DepthState';
+import { StencilState } from './StencilState';
+import { CullState } from './CullState';
+import { Color } from './Color';
+import { ClearOptions } from './ClearOptions';
+import { DataType, ToGLType } from './DataType';
+
+import { ShaderProgram } from './ShaderProgram';
+import { RenderTarget } from './RenderTarget';
+import { VertexBuffer } from './VertexBuffer';
+import { IndexBuffer } from './IndexBuffer';
+import { Topology } from './Topology';
+import { Resource } from './Resource';
+
+
+
+interface ContextOptions {
+
+}
 
 /**
  *  The web gl context
  */
-class Context {
+export class Context {
+
+
+    canvas: HTMLCanvasElement;
+    gl: WebGLRenderingContext;
+
+    private _extensions: { [s: string]: any };
+    private _blendState: BlendState;
+    private _depthState: DepthState;
+    private _stencilState: StencilState;
+    private _cullState: CullState;
+    private _clearOptions: ClearOptions;
+    private _currentProgram: ShaderProgram;
+    private _currentRenderTarget: RenderTarget;
+
+    private _lastUsedAttributeLocs: number[] = [];
 
     /**
      * Creates a new web gl context
      * @param canvas
      * @param options
      */
-    constructor(canvas, options) {
+    constructor(canvas: HTMLCanvasElement, options: any) {
 
-        var context_options = {
-            alpha: false,
+        let context_options = {
+            alpha: true,
             depth: true,
             stencil: true,
             antialias: true,
@@ -38,7 +66,7 @@ class Context {
         this.canvas = canvas;
 
         // the gl context
-        this.gl = canvas.getContext("webgl", context_options) || canvas.getContext("experimental-webgl", context_options);
+        this.gl = <WebGLRenderingContext>(canvas.getContext("webgl", context_options) || canvas.getContext("experimental-webgl", context_options));
 
         if (!this.gl) {
             throw new Error('Counldnt get webgl context from canvas');
@@ -65,7 +93,7 @@ class Context {
                 console.warn("Couldnt initialize extension", name);
             }
         })
-     
+
 
 
         // init defaults
@@ -131,9 +159,13 @@ class Context {
      */
     set depthState(val) {
 
-        if (this._depthState.equals(val)) {
+        let gl = this.gl;
+
+        /*if (this._depthState.equals(val)) {
             return;
-        }
+        }*/
+
+        gl.depthFunc(val.compareFunc)
 
         if (val.enabled) {
             gl.enable(gl.DEPTH_TEST);
@@ -157,9 +189,25 @@ class Context {
      */
     set stencilState(val) {
 
-        if (this._stencilState.equals(val)) {
+        let gl = this.gl;
+
+        /*if (this._stencilState.equals(val)) {
             return;
         }
+        */
+
+        if (val.enabled) {
+            gl.enable(gl.STENCIL_TEST);
+        } else {
+            gl.disable(gl.STENCIL_TEST);
+        }
+
+        gl.stencilFunc(val.compareFunc, val.value, val.readMask);
+
+        gl.stencilOp(val.fail, val.depthFail, val.depthPass);
+
+        gl.stencilMask(val.writeMask);
+
 
         this._stencilState = val;
     }
@@ -179,9 +227,9 @@ class Context {
 
         let gl = this.gl;
 
-        if (this._cullState.equals(val)) {
+       /* if (this._cullState.equals(val)) {
             return;
-        }
+        }*/
 
         gl.frontFace(val.winding);
         gl.cullFace(gl.BACK);
@@ -199,9 +247,10 @@ class Context {
     /**
      * Set the clear options
      */
-    set clearOptions(val) {
-        var gl = this.gl;
-        var color = val.color;
+    set clearOptions(val: ClearOptions) {
+
+        let gl = this.gl;
+        let color = val.color;
         gl.clearColor(color.r, color.g, color.b, color.a);
         gl.clearDepth(val.depth);
         gl.clearStencil(val.stencil);
@@ -212,7 +261,10 @@ class Context {
     /**
      * Set the render buffer to render to
      */
-    set renderTarget(rt) {
+    set renderTarget(rt: RenderTarget) {
+
+        let gl = this.gl;
+
         this._currentRenderTarget = rt;
 
         if (rt == null) {
@@ -220,6 +272,12 @@ class Context {
         } else {
             rt.bind(this.gl);
         }
+    }
+
+    set program(p: ShaderProgram) {
+        
+        this._currentProgram = p;
+        this.bind(p);
     }
 
 
@@ -230,9 +288,10 @@ class Context {
      * @param w
      * @param h
      */
-    setViewport(x, y, w, h) {
+    setViewport(x: number, y: number, w: number, h: number) {
 
-        this.gl.setViewport(x, y, w, h);
+        //console.log(w, h);
+        this.gl.viewport(x, y, w, h);
     }
 
 
@@ -243,7 +302,7 @@ class Context {
      * Update/Create a gl resource
      * @param resource
      */
-    update(resource, options) {
+    update(resource: Resource, options?: any) {
 
         if (resource._glresource == null) {
             resource.create(this.gl, options);
@@ -256,7 +315,7 @@ class Context {
      * Release a resource
      * @param resource
      */
-    release(resource) {
+    release(resource: Resource) {
 
         resource.release(this.gl);
 
@@ -267,7 +326,7 @@ class Context {
      * 
      * @param resource
      */
-    bind(resource) {
+    bind(resource: Resource) {
         resource.bind(this.gl);
     }
 
@@ -277,7 +336,7 @@ class Context {
      * @param ibuffer
      * @param topology
      */
-    draw(vbuffer, ibuffer, topology) {
+    draw(vbuffer: VertexBuffer, ibuffer: IndexBuffer, topology: Topology, count?: number) {
 
         // bind the vbuffer
         vbuffer.bind(this.gl);
@@ -288,16 +347,28 @@ class Context {
 
         if (!ibuffer) {
 
+
+            if (vbuffer.count == 0) {
+                //console.error('0 vertices, ABORTINGS');
+                return;
+            }
+           
             // draw without indices
-            this.gl.drawArrays(topology, 0, vbuffer.count);
+            this.gl.drawArrays(topology, 0, count || vbuffer.count);
 
         } else {
+
+            if (ibuffer.count == 0) {
+                //console.error('0 vertices, ABORTINGS');
+                return;
+            }
+
 
             // bind index buffer
             ibuffer.bind(this.gl);
 
             // draw with indices
-            this.gl.drawElements(topology, ibuffer.count, this.gl.UNSIGNED_SHORT, 0);
+            this.gl.drawElements(topology, count || ibuffer.count, this.gl.UNSIGNED_SHORT, 0);
         }
 
 
@@ -311,7 +382,12 @@ class Context {
      * @param topology
      * @param count
      */
-    drawInstanced(vbuffer, ibuffer, instbuffer, topology, count) {
+    drawInstanced(
+        vbuffer: VertexBuffer,
+        ibuffer: IndexBuffer,
+        instbuffer: VertexBuffer,
+        topology: Topology,
+        count: number) {
 
         var gl = this.gl;
         var inst_ext = this._extensions['ANGLE_instanced_arrays'];
@@ -337,7 +413,7 @@ class Context {
         if (!ibuffer) {
 
             // draw without indices
-            gl.drawArraysInstancedANGLE(topology, 0, vbuffer.count, count);
+            inst_ext.drawArraysInstancedANGLE(topology, 0, vbuffer.count, count);
 
         } else {
 
@@ -355,7 +431,7 @@ class Context {
      * @param vb
      * @param divisor
      */
-    bindAttributes(vb, divisor) {
+    bindAttributes(vb: VertexBuffer, divisor?: number) {
 
         var gl = this.gl;
         var inst_ext = this._extensions['ANGLE_instanced_arrays'];
@@ -364,7 +440,13 @@ class Context {
             elements = vb.layout.attributes,
             element;
 
-        for (var i = 0; i < elements.length; i++) {
+        for (let i = 0; i < this._lastUsedAttributeLocs.length; i++) {
+            gl.disableVertexAttribArray(this._lastUsedAttributeLocs[i]);
+        }
+
+        this._lastUsedAttributeLocs.length = 0;
+
+        for (let i = 0; i < elements.length; i++) {
 
             element = elements[i];
 
@@ -372,8 +454,10 @@ class Context {
 
             if (loc !== undefined) {
 
+                this._lastUsedAttributeLocs.push(loc);
+
                 gl.enableVertexAttribArray(loc);
-                gl.vertexAttribPointer(loc, element.count, DataType.ToGLType(element.type), false, vsize, element.offset);
+                gl.vertexAttribPointer(loc, element.count, ToGLType(element.type), false, vsize, element.offset);
 
                 if (inst_ext && divisor !== undefined) {
 
@@ -394,7 +478,7 @@ class Context {
      * Sets uniforms for the current program
      * @param {Object} values
      */
-    uniforms(values) {
+    uniforms(values: any) {
 
         if (this._currentProgram == null) {
             throw new Error('A program must be bound before you can apply uniforms');
@@ -407,7 +491,7 @@ class Context {
 
         for (var i in values) {
 
-            var param = program_uniforms[i];
+            var param: any = program_uniforms[i];
             var val = values[i];
 
             if (!param)
@@ -418,7 +502,7 @@ class Context {
                     gl.uniformMatrix4fv(param.index, false, val);
                     break;
                 }
-                   
+
                 case gl.FLOAT_MAT3: {
                     gl.uniformMatrix3fv(param.index, false, val);
                     break;
@@ -446,7 +530,7 @@ class Context {
                     gl.uniform1fv(param.index, [val]);
                     break;
                 }
-   
+
                 case gl.SAMPLER_2D: {
 
                     tex_count++;
@@ -455,6 +539,7 @@ class Context {
                         break;
                     }
 
+                    //console.log('binding', tex_count);
                     val.bind(gl, tex_count);
                     gl.uniform1i(param.index, tex_count);
 
@@ -474,16 +559,13 @@ class Context {
     /**
      * Clear the current render target
      */
-    clear(bits) {
+    clear(bits: number) {
 
         if (arguments.length == 0) {
             bits = ClearOptions.ALL;
         }
 
-       this.gl.clear(bits);
+        this.gl.clear(bits);
     }
 
 };
-
-
-module.exports = Context;

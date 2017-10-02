@@ -4,17 +4,30 @@
  * @author Gabriel Roy <gab@uon.io>
  * @ignore
  */
-const Resource = require('./Resource');
-const DataType = require('./DataType');
-const PixelFormat = require('./PixelFormat');
+import { Resource } from './Resource';
+import { PixelFormat } from './PixelFormat';
+import { DataType, ToGLType } from './DataType';
 
 
 /**
  * 
  */
-class Texture extends Resource {
+export class Texture extends Resource {
 
-    constructor(width, height, type, format, mipmap) {
+    image: HTMLImageElement;
+    width: number;
+    height: number;
+    type: DataType;
+    format: PixelFormat;
+    mipmap: boolean;
+
+
+    constructor(width: number,
+        height: number,
+        type: DataType,
+        format: PixelFormat,
+        mipmap?: boolean) {
+
         super();
 
         this.image = null;
@@ -22,10 +35,11 @@ class Texture extends Resource {
         this.height = height;
         this.format = format;
         this.type = type;
+        this.mipmap = mipmap || false;
 
     }
 
-    static FromImage(image) {
+    static FromImage(image: HTMLImageElement) {
 
         var texture = new Texture(image.width, image.height, DataType.Uint8, PixelFormat.RGBA);
         texture.image = image;
@@ -33,7 +47,7 @@ class Texture extends Resource {
         return texture;
     }
 
-    create(gl, options) {
+    create(gl: WebGLRenderingContext) {
 
         // check if we are allowed
         if (this._glresource) {
@@ -54,7 +68,7 @@ class Texture extends Resource {
 
     }
 
-    update(gl, options) {
+    update(gl: WebGLRenderingContext) {
 
         var id = this._glresource.id;
 
@@ -67,16 +81,17 @@ class Texture extends Resource {
         gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
 
         // upload the image to vram
-        gl.texImage2D(gl.TEXTURE_2D, 0, this.format, this.format, DataType.ToGLType(this.type), this.image);
+        // gl.texImage2D(gl.TEXTURE_2D, 0, this.format, this.format, ToGLType(this.type), this.image);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this.image);
 
         // TODO pass a sampler state...
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
-        gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
-        gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
         // generate mipmaps if user requested it
-        if (options && options.mipmap) {
+        if (this.mipmap) {
             gl.generateMipmap(gl.TEXTURE_2D);
         }
 
@@ -84,7 +99,7 @@ class Texture extends Resource {
 
     }
 
-    bind(gl, unit) {
+    bind(gl: WebGLRenderingContext, unit?: number) {
 
         var gl_obj = this._glresource;
 
@@ -98,7 +113,7 @@ class Texture extends Resource {
 
     }
 
-    release(gl) {
+    release(gl: WebGLRenderingContext) {
 
         gl.deleteTexture(this._glresource.id);
 
@@ -107,6 +122,3 @@ class Texture extends Resource {
 
 
 };
-
-
-module.exports = Texture;

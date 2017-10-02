@@ -1,59 +1,57 @@
 ﻿/**
- * @file VertexBuffer
- * @see uon.gl.VertexBuffer
+ * @file IndexBuffer
+ * @see uon.gl.IndexBuffer
  * @author Gabriel Roy <gab@uon.io>
  * @ignore
  */
-const Resource = require('./Resource');
-const DataType = require('./DataType');
-const PixelFormat = require('./PixelFormat');
 
-
+import { Resource } from './Resource';
 
 /**
  * 
  */
-class VertexBuffer extends Resource {
+export class IndexBuffer extends Resource {
+
+    data: Uint16Array;
+    count: number;
+    dynamic: boolean;
 
     /**
-     * Creates a new VertexBuffer
-     * Note that only float attributes are supports
-     * @param {VertexLayout} layout
+     * Creates a new IndexBuffer
      */
-    constructor(layout, count, data, dynamic) {
+    constructor(count: number, data?: Uint16Array, dynamic?: boolean) {
+
         super();
 
-
-        this.layout = layout;
-        this.data = data || new Float32Array(layout.getElementStride() * count);
+        this.data = data || new Uint16Array(count);
         this.count = count;
         this.dynamic = dynamic;
 
     }
 
-    toFloatArray() {
+    toUintArray() {
         return this.data;
     }
 
-    create(gl) {
+    create(gl: WebGLRenderingContext) {
 
         var id = gl.createBuffer();
         this._glresource = {
             id: id,
-            target: gl.ARRAY_BUFFER,
+            target: gl.ELEMENT_ARRAY_BUFFER,
             mode: this.dynamic ? gl.DYNAMIC_DRAW : gl.STATIC_DRAW
         };
 
     }
 
-    update(gl) {
+    update(gl: WebGLRenderingContext) {
         this.bind(gl);
 
         var gl_obj = this._glresource;
         gl.bufferData(gl_obj.target, this.data, gl_obj.mode);
     }
 
-    bind(gl) {
+    bind(gl: WebGLRenderingContext) {
 
         if (!this._glresource) {
             throw new Error('Cannot bind unexisting resource');
@@ -64,7 +62,7 @@ class VertexBuffer extends Resource {
 
     }
 
-    release(gl) {
+    release(gl: WebGLRenderingContext) {
 
         var gl_obj = this._glresource;
 
@@ -74,6 +72,3 @@ class VertexBuffer extends Resource {
 
 
 };
-
-
-module.exports = VertexBuffer;

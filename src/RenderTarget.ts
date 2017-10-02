@@ -4,12 +4,22 @@
  * @author Gabriel Roy <gab@uon.io>
  * @ignore
  */
-const Resource = require('./Resource');
+import { Resource } from './Resource';
+import { PixelFormat } from './PixelFormat';
+import { DataType } from './DataType';
+
+/**
+ * 
+ */
+export class RenderTarget extends Resource {
 
 
-class RenderTarget extends Resource {
+    width: number;
+    height: number;
+    format: PixelFormat;
+    type: DataType;
 
-    constructor(width, height, type, format) {
+    constructor(width: number, height: number, type: DataType, format: PixelFormat) {
 
         super();
 
@@ -20,7 +30,7 @@ class RenderTarget extends Resource {
 
     }
 
-    create(gl) {
+    create(gl: WebGLRenderingContext) {
 
         // create and bind a framebuffer
         var framebuffer = gl.createFramebuffer();
@@ -57,17 +67,17 @@ class RenderTarget extends Resource {
 
     }
 
-    update(gl) {
-        throw new Error('You must implement update(gl) in subclass ' + this.constructor.name);
+    update(gl: WebGLRenderingContext) {
+        
     }
 
-    bind(gl) {
+    bind(gl: WebGLRenderingContext) {
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, this._glresource.fbo);
 
     }
 
-    release(gl) {
+    release(gl: WebGLRenderingContext) {
 
         gl.deleteTexture(this._glresource.color);
         gl.deleteRenderbuffer(this._glresource.depth);
@@ -80,6 +90,3 @@ class RenderTarget extends Resource {
 
 
 };
-
-
-module.exports = RenderTarget;

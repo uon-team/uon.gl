@@ -5,20 +5,23 @@
  * @ignore
  */
 
-const CompareOp = require('./CompareOp');
-
+import { CompareOp } from './CompareOp';
 
 /**
  * 
  */
-class DepthState {
+export class DepthState {
+
+
+    enabled: boolean;
+    compareFunc: CompareOp;
 
     /**
      *
      * @param enabled
      * @param cmp
      */
-    constructor(enabled, cmp) {
+    constructor(enabled: boolean, cmp?: CompareOp) {
 
         this.enabled = enabled;
         this.compareFunc = cmp || CompareOp.Less;
@@ -29,7 +32,7 @@ class DepthState {
      * Test for equality with anonther BlendState
      * @param {DepthState} ds
      */
-    equals(dss) {
+    equals(dss: DepthState) {
         return this.enabled === dss.enabled &&
             this.compareFunc === dss.compareFunc;
     }
@@ -38,7 +41,7 @@ class DepthState {
      * Copy values from another blend state
      * @param {DepthState} ds
      */
-    copy(dss) {
+    copy(dss: DepthState) {
         this.enabled = dss.enabled;
         this.compareFunc = dss.compareFunc;
     }
@@ -52,6 +55,3 @@ class DepthState {
 
 
 };
-
-
-module.exports = DepthState;

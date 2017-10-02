@@ -4,14 +4,23 @@
  * @author Gabriel Roy <gab@uon.io>
  * @ignore
  */
-const Resource = require('./Resource');
+import { Resource } from './Resource';
+import { Shader } from './Shader';
 
 /**
  * 
  */
-class ShaderProgram extends Resource {
+export class ShaderProgram extends Resource {
 
-    constructor(vert, frag) {
+
+    vertex: Shader;
+    fragment: Shader;
+
+    attributeLocations: { [k: string]: number };
+    uniforms: { [k: string]: object };
+
+
+    constructor(vert: Shader, frag: Shader) {
         super();
 
         this.vertex = vert;
@@ -21,7 +30,7 @@ class ShaderProgram extends Resource {
         this.uniforms = {};
     }
 
-    create(gl) {
+    create(gl: WebGLRenderingContext) {
 
         var id = gl.createProgram();
 
@@ -52,10 +61,10 @@ class ShaderProgram extends Resource {
 
         // extract attributes
         var attr_count = gl.getProgramParameter(id, gl.ACTIVE_ATTRIBUTES);
-        for (var i = 0; i < attr_count; i++) {
+        for (let i = 0; i < attr_count; i++) {
 
-            var attr = gl.getActiveAttrib(id, i);
-            var loc = gl.getAttribLocation(id, attr.name);
+            let attr = gl.getActiveAttrib(id, i);
+            let loc = gl.getAttribLocation(id, attr.name);
             gl.bindAttribLocation(id, loc, attr.name);
 
             this.attributeLocations[attr.name] = loc;
@@ -64,11 +73,11 @@ class ShaderProgram extends Resource {
 
         // extract uniforms
         attr_count = gl.getProgramParameter(id, gl.ACTIVE_UNIFORMS);
-        for (var i = 0; i < attr_count; i++) {
+        for (let i = 0; i < attr_count; i++) {
 
-            var attr = gl.getActiveUniform(id, i);
-            var loc = gl.getUniformLocation(id, attr.name);
-            var param_obj = {
+            let attr = gl.getActiveUniform(id, i);
+            let loc = gl.getUniformLocation(id, attr.name);
+            let param_obj = {
                 name: attr.name,
                 type: attr.type,
                 index: loc
@@ -86,27 +95,24 @@ class ShaderProgram extends Resource {
 
     }
 
-    update(gl) {
+    update(gl: WebGLRenderingContext) {
         return
     }
 
-    bind(gl) {
+    bind(gl: WebGLRenderingContext) {
 
         gl.useProgram(this._glresource.id);
 
     }
 
-    release(gl) {
+    release(gl: WebGLRenderingContext) {
 
 
         gl.deleteProgram(this._glresource.id);
 
-       // this.vertex.release(gl);
+        // this.vertex.release(gl);
 
         // this.fragment.release(gl);
     }
 
-
 };
-
-module.exports = ShaderProgram;
