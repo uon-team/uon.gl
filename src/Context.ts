@@ -9,7 +9,6 @@ import { BlendState } from './BlendState';
 import { DepthState } from './DepthState';
 import { StencilState } from './StencilState';
 import { CullState } from './CullState';
-import { Color } from './Color';
 import { ClearOptions } from './ClearOptions';
 import { DataType, ToGLType } from './DataType';
 
@@ -273,6 +272,7 @@ export class Context {
             rt.bind(this.gl);
         }
     }
+
 
     set program(p: ShaderProgram) {
         

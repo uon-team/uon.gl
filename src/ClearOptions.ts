@@ -5,7 +5,7 @@
  * @ignore
  */
 
-import { Color } from 'uon.math'
+import { Color } from '@uon/math'
 
 
 /**

@@ -1,15 +1,17 @@
 {
-  "name": "uon.gl",
-  "version": "0.2.1",
+  "name": "@uon/gl",
+  "version": "0.3.0",
   "description": "A WebGL library",
   "main": "dist/index.js",
-  
-   
-  "dependencies": {
-    "uon.math": "latest"
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "prepublishOnly": "tsc -p ./ --outDir dist/"
+  },
+  "peerDependencies": {
+    "@uon/math": "latest"
   },
   "devDependencies": {
-	
+
   },
   "repository": {
     "type": "git",
